@@ -1,0 +1,21 @@
+.Banner {
+  color: #171717;
+  background-color: ghostwhite;
+  height: 3rem;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 2.5px solid #171717;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  z-index: 1;
+}
+
+.Banner p {
+  height: 3rem;
+  line-height: 3rem;
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: bolder;
+  margin-top: 0;
+}

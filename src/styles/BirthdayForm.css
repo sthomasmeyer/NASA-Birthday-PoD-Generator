@@ -1,0 +1,68 @@
+/* TODO --> Write media queries so that this content will dynamically adapt to the user's screen size. */
+
+.BirthdayForm {
+  border: 10px solid #171717;
+  background-color: ghostwhite;
+  color: #171717;
+  width: 50%;
+  max-width: 600px;
+  padding: 10px;
+  margin: 0 auto;
+  box-shadow: -3px 3px 3px #d7dfe1;
+}
+
+.BirthdayForm div {
+  padding: 5px;
+  margin: 5px;
+}
+
+.BirthdayForm div label {
+  display: inline-block;
+}
+
+.BirthdayForm div label p {
+  font-weight: bolder;
+  display: inline-block;
+  width: 55px;
+}
+
+.BirthdayForm div label input {
+  margin-left: 10px;
+  border: 2.5px solid #d7dfe1;
+  width: 50px;
+  height: 17.5px;
+  display: inline-block;
+  text-align: center;
+}
+
+.BirthdayForm .BirthdayForm-month-field {
+  margin-top: -20px;
+  margin-bottom: -25px;
+}
+
+.BirthdayForm .BirthdayForm-day-field {
+  margin-top: 0px;
+  margin-bottom: -15px;
+}
+
+.BirthdayForm-submit-button {
+  display: flex;
+  justify-content: center;
+}
+
+.BirthdayForm-submit-button button {
+  background-color: #171717;
+  color: ghostwhite;
+  font-variant: small-caps;
+  height: 40px;
+  width: 80px;
+  border: 2.5px solid #f1f1c6;
+  border-radius: 25% 10%;
+}
+
+.BirthdayForm-submit-button button:hover {
+  cursor: pointer;
+  background-color: #f1f1c6;
+  color: #171717;
+  border: 4px solid #171717;
+}

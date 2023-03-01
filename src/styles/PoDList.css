@@ -1,0 +1,6 @@
+/* TODO --> Write media queries so that this content will dynamically adapt to the user's screen size. */
+
+.PoDList {
+  max-width: 1500px;
+  margin: 0 auto;
+}

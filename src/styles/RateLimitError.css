@@ -1,0 +1,10 @@
+/* TODO --> Create a more informative and beautiful 'RateLimitError' component. */
+
+.RateLimitError {
+  border: 7.5px solid #171717;
+  border-radius: 25px;
+  margin: 2rem;
+  padding: 10px;
+  background-color: ghostwhite;
+  max-width: 1400px;
+}
