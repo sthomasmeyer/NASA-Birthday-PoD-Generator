@@ -7,7 +7,7 @@ https://user-images.githubusercontent.com/91103557/224372706-063dbb70-2de8-4907-
 ### Local Installation Guide
 
 1. Clone the repository.
-   a) [GitHub's Guide to the Git Clone Command](https://github.com/git-guides/git-clone)
+   - [GitHub's Guide to the Git Clone Command](https://github.com/git-guides/git-clone)
 2. Navigate into the project directory.
 3. Install the project dependencies using `npm` or `yarn`.
 4. Generate a [NASA API Key](https://api.nasa.gov/)
