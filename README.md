@@ -4,11 +4,11 @@ This React.js app generates every NASA Picture of the Day (PoD) related to a use
 
 https://user-images.githubusercontent.com/91103557/224372706-063dbb70-2de8-4907-8b2f-bc1331f298e6.mp4
 
-<!-- ### Local Installation Guide
+### Local Installation Guide
 
 1. Clone the repository.
+   a) [GitHub's Guide to the Git Clone Command](https://github.com/git-guides/git-clone)
 2. Navigate into the project directory.
 3. Install the project dependencies using `npm` or `yarn`.
-4. Generate a NASA API Key: [](https://api.nasa.gov/)
-5. Create a `.env` file in the root directory of the project and add your NASA API Key.
-   a) Note, I used a git-ignored `secrets.js` file, which is effective but unconventional. -->
+4. Generate a [NASA API Key](https://api.nasa.gov/)
+5. Create a `secrets.js` file in the src directory of the project and add your NASA API Key.
