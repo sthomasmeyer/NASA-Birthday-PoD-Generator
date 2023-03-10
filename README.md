@@ -2,7 +2,7 @@
 
 This React.js app generates every NASA Picture of the Day (PoD) related to a user-inputted date. It accepts a given date, then utilizes NASA's open API to fetch the appropriate PoD images and information. The primary technologies used to build this app include: (1) React and Vite, (2) CSS, and (3) Axios.
 
-https://user-images.githubusercontent.com/91103557/224371938-34662431-c035-4fed-a3d3-8a7b5316f0a5.mp4
+https://user-images.githubusercontent.com/91103557/224372706-063dbb70-2de8-4907-8b2f-bc1331f298e6.mp4
 
 <!-- ### Local Installation Guide
 
