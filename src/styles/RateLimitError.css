@@ -1,10 +1,42 @@
-/* TODO --> Create a more informative and beautiful 'RateLimitError' component. */
-
 .RateLimitError {
-  border: 7.5px solid #171717;
-  border-radius: 25px;
-  margin: 2rem;
-  padding: 10px;
-  background-color: ghostwhite;
-  max-width: 1400px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--accent-primary);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-surface);
+}
+
+.RateLimitError-header {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  color: var(--accent-primary);
+}
+
+.RateLimitError-message {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink-primary);
+  max-width: 65ch;
+}
+
+.RateLimitError-retry {
+  margin-top: 0.25rem;
+  padding: 0.45rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.06em;
+  color: var(--keycap-ink);
+  background-color: var(--keycap-bg);
+  border: 1px solid var(--keycap-bg);
+  border-radius: 6px;
+  cursor: pointer;
 }

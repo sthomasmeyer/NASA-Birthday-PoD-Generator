@@ -1,76 +1,123 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import '../styles/BirthdayForm.css';
 
-function BirthdayForm({ onSubmit }) {
-  const [month, setMonth] = useState(1);
-  const [day, setDay] = useState(1);
-  const [maxVal, setMaxVal] = useState(31);
+const MONTHS = [
+  { value: 1, label: '01 - January' },
+  { value: 2, label: '02 - February' },
+  { value: 3, label: '03 - March' },
+  { value: 4, label: '04 - April' },
+  { value: 5, label: '05 - May' },
+  { value: 6, label: '06 - June' },
+  { value: 7, label: '07 - July' },
+  { value: 8, label: '08 - August' },
+  { value: 9, label: '09 - September' },
+  { value: 10, label: '10 - October' },
+  { value: 11, label: '11 - November' },
+  { value: 12, label: '12 - December' },
+];
 
-  useEffect(() => {
-    setDay(1);
+export function getDaysInMonth(selectedMonth) {
+  const m = Number(selectedMonth);
+  if (m === 2) {
+    // Allow Feb 29 for leap-year birthdays (1996, 2000, ..., 2024).
+    return 29;
+  }
+  if ([4, 6, 9, 11].includes(m)) {
+    return 30;
+  }
+  return 31;
+}
 
-    const daysInMonth = (month) => {
-      if (+month === 2) {
-        return 28;
-      } else if ([4, 6, 9, 11].includes(+month)) {
-        return 30;
-      } else {
-        return 31;
-      }
-    };
+function BirthdayForm({
+  birthday,
+  selectedYear,
+  latestYear,
+  onDateChange,
+  onSelectToday,
+}) {
+  const now = new Date();
+  const todayMonth = now.getMonth() + 1;
+  const todayDay = now.getDate();
 
-    setMaxVal(daysInMonth(month));
-  }, [month]);
+  const month = birthday?.month ?? todayMonth;
+  const maxVal = getDaysInMonth(month);
+  const day = Math.min(birthday?.day ?? todayDay, maxVal);
+  const isTodaySelected =
+    month === todayMonth &&
+    day === todayDay &&
+    selectedYear === latestYear;
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    onSubmit(month, day);
+  // WHY: Clamp `day` synchronously inside `handleMonthChange` rather than in a
+  // post-render `useEffect` so switching from e.g. May 31 to February never
+  // emits an invalid intermediate `(2, 31)` date.
+  const handleMonthChange = (event) => {
+    const nextMonth = Number(event.target.value);
+    const nextMax = getDaysInMonth(nextMonth);
+    const clampedDay = Math.min(day, nextMax);
+    onDateChange(nextMonth, clampedDay);
   };
 
+  const handleDayChange = (event) => {
+    const nextDay = Number(event.target.value);
+    onDateChange(month, nextDay);
+  };
+
+  const dayOptions = Array.from({ length: maxVal }, (_, idx) => idx + 1);
+
   return (
-    <div className='BirthdayForm'>
+    <section className='BirthdayForm' aria-label='Date Selector'>
       <div className='BirthdayForm-instructions'>
         <p>
-          Think of a date (e.g., your birthday, anniversary, etc.) that is
-          special to you. Select the month -- [<strong>1</strong>] for January,
-          [<strong>2</strong>] for February... [<strong>12</strong>] for
-          December. Then select the day of the month (<strong>1 - 31</strong>).
-          Finally, press the <strong>submit</strong> button to see every NASA
-          "Picture of the Day" released on that date.
+          Choose a birthday, anniversary, or any calendar date to explore every
+          NASA Astronomy Picture of the Day captured on that day since June
+          1995.
         </p>
       </div>
-      <form onSubmit={handleSubmit}>
-        <div className='BirthdayForm-month-field'>
-          <label>
-            <p>Month: </p>
-            <input
-              type='number'
-              min='1'
-              max='12'
-              value={month}
-              onChange={(event) => setMonth(event.target.value)}
-              required
-            />
-          </label>
-        </div>
-        <div className='BirthdayForm-day-field'>
-          <label>
-            <p>Day: </p>
-            <input
-              type='number'
-              min='1'
-              max={maxVal}
-              value={day}
-              onChange={(event) => setDay(event.target.value)}
-              required
-            />
-          </label>
-        </div>
-        <div className='BirthdayForm-submit-button'>
-          <button type='submit'>Submit</button>
-        </div>
-      </form>
-    </div>
+
+      <div className='BirthdayForm-controls' role='group' aria-label='Archive Date Dials'>
+        <label className='BirthdayForm-field'>
+          <span className='BirthdayForm-label instrument-badge'>MONTH</span>
+          <select
+            className='BirthdayForm-select numeric-readout'
+            value={month}
+            onChange={handleMonthChange}
+            aria-label='Month'
+          >
+            {MONTHS.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className='BirthdayForm-field BirthdayForm-field--day'>
+          <span className='BirthdayForm-label instrument-badge'>DAY</span>
+          <select
+            className='BirthdayForm-select numeric-readout'
+            value={day}
+            onChange={handleDayChange}
+            aria-label='Day of Month'
+          >
+            {dayOptions.map((d) => (
+              <option key={d} value={d}>
+                {String(d).padStart(2, '0')}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          type='button'
+          className='BirthdayForm-today instrument-badge'
+          onClick={onSelectToday}
+          disabled={isTodaySelected}
+          title="Jump to today's calendar date and current year"
+        >
+          TODAY
+        </button>
+      </div>
+    </section>
   );
 }
 

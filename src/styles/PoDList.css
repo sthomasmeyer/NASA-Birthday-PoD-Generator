@@ -1,6 +1,362 @@
-/* TODO --> Write media queries so that this content will dynamically adapt to the user's screen size. */
-
 .PoDList {
-  max-width: 1500px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  width: 100%;
+}
+
+.PoDList-nav-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-top-color: var(--specular-top);
+  box-shadow: var(--shadow-surface);
+  border-radius: 12px;
+  padding: 0.9rem 1.15rem;
+}
+
+.PoDList-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.PoDList-readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.06em;
+  color: var(--ink-secondary);
+}
+
+.PoDList-readout-primary {
+  color: var(--ink-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.PoDList-readout-sep {
+  color: var(--accent-primary);
+}
+
+.PoDList-sync-pill {
+  font-size: 0.68rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  background-color: var(--accent-subtle);
+  color: var(--accent-primary);
+}
+
+.PoDList-toolbar-Right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.PoDList-view-toggle {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-hairline);
+  border-radius: 7px;
+  padding: 2px;
+}
+
+.PoDList-view-btn {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.06em;
+  color: var(--ink-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 140ms var(--ease-spring),
+    color 140ms var(--ease-spring);
+}
+
+.PoDList-view-btn.is-active {
+  background-color: var(--bg-surface);
+  color: var(--ink-primary);
+  box-shadow: 0 1px 2px oklch(0% 0 0 / 0.08);
+}
+
+.PoDList-stepper {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.PoDList-step-btn {
+  min-width: 102px;
+  padding: 0.42rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.05em;
+  color: var(--ink-primary);
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    border-color 140ms var(--ease-spring),
+    transform 140ms var(--ease-spring),
+    opacity 140ms var(--ease-spring);
+}
+
+.PoDList-step-btn:hover:not(:disabled) {
+  border-color: var(--accent-primary);
+}
+
+.PoDList-step-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.PoDList-step-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.PoDList-scrubber {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.1rem 0.35rem;
+  scrollbar-width: thin;
+}
+
+.PoDList-year-key {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22rem;
+  min-width: 56px;
+  padding: 0.42rem 0.55rem 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.03em;
+  color: var(--ink-secondary);
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-hairline);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background-color 140ms var(--ease-spring),
+    color 140ms var(--ease-spring),
+    border-color 140ms var(--ease-spring),
+    transform 140ms var(--ease-spring);
+}
+
+.PoDList-year-key:hover {
+  color: var(--ink-primary);
+  border-color: var(--border-strong);
+}
+
+.PoDList-year-key.is-selected {
+  color: var(--keycap-ink);
+  background-color: var(--keycap-bg);
+  border-color: var(--keycap-bg);
+  font-weight: var(--weight-semibold);
+}
+
+.PoDList-year-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--ink-muted);
+  opacity: 0.35;
+  transition:
+    background-color 140ms var(--ease-spring),
+    opacity 140ms var(--ease-spring);
+}
+
+.PoDList-year-key.is-ready .PoDList-year-dot {
+  opacity: 0.75;
+}
+
+.PoDList-year-key.is-selected .PoDList-year-dot {
+  background-color: var(--accent-primary);
+  opacity: 1;
+}
+
+.PoDList-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.PoDList-contact-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 0;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  border-top-color: var(--specular-top);
+  box-shadow: var(--shadow-surface);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    border-color 160ms var(--ease-spring),
+    transform 160ms var(--ease-spring);
+}
+
+.PoDList-contact-card:hover {
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+}
+
+.PoDList-contact-card.is-selected {
+  border-color: var(--accent-primary);
+}
+
+.PoDList-contact-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background-color: var(--bg-stage);
+  overflow: hidden;
+}
+
+.PoDList-contact-media img,
+.PoDList-contact-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.PoDList-contact-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: oklch(14% 0.012 260 / 0.82);
+  border: 1px solid oklch(100% 0 0 / 0.24);
+  color: oklch(97% 0.005 250);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  transition:
+    transform 150ms var(--ease-spring),
+    background-color 150ms var(--ease-spring),
+    border-color 150ms var(--ease-spring);
+}
+
+.PoDList-contact-play--static {
+  position: static;
+  transform: none;
+}
+
+.PoDList-contact-card:hover .PoDList-contact-play {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.PoDList-contact-play-icon {
+  margin-left: 2px;
+}
+
+.PoDList-contact-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: oklch(75% 0.005 95);
+}
+
+.PoDList-contact-year {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.05em;
+  padding: 0.22rem 0.5rem;
+  border-radius: 5px;
+  background-color: oklch(14% 0.005 90 / 0.85);
+  color: oklch(95% 0.005 95);
+  border: 1px solid oklch(100% 0 0 / 0.14);
+}
+
+.PoDList-contact-badge {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.45rem;
+  border-radius: 5px;
+  background-color: var(--accent-primary);
+  color: oklch(99% 0 0);
+}
+
+.PoDList-contact-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 1rem 0.95rem;
+}
+
+.PoDList-contact-date {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.PoDList-contact-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  color: var(--ink-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 960px) {
+  .PoDList-contact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .PoDList-contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
