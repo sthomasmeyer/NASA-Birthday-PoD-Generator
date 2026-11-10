@@ -1,21 +1,84 @@
 .Banner {
-  color: #171717;
-  background-color: ghostwhite;
-  height: 3rem;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  border-bottom: 2.5px solid #171717;
-  width: 100%;
-  position: absolute;
-  top: 0;
-  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-hairline);
 }
 
-.Banner p {
-  height: 3rem;
-  line-height: 3rem;
-  text-align: center;
-  font-size: 2.5rem;
-  font-weight: bolder;
-  margin-top: 0;
+.Banner-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.Banner-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.Banner-signal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.Banner-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--ink-primary);
+}
+
+.Banner-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.Banner-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.06em;
+  color: var(--ink-primary);
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-strong);
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    background-color 150ms var(--ease-spring),
+    border-color 150ms var(--ease-spring),
+    transform 150ms var(--ease-spring);
+}
+
+.Banner-theme-toggle:hover {
+  border-color: var(--accent-primary);
+}
+
+.Banner-theme-toggle:active {
+  transform: translateY(1px);
+}
+
+.Banner-theme-icon {
+  color: var(--accent-primary);
+  flex-shrink: 0;
 }

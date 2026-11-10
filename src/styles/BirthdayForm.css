@@ -1,68 +1,107 @@
-/* TODO --> Write media queries so that this content will dynamically adapt to the user's screen size. */
-
 .BirthdayForm {
-  border: 10px solid #171717;
-  background-color: ghostwhite;
-  color: #171717;
-  width: 50%;
-  max-width: 600px;
-  padding: 10px;
-  margin: 0 auto;
-  box-shadow: -3px 3px 3px #d7dfe1;
-}
-
-.BirthdayForm div {
-  padding: 5px;
-  margin: 5px;
-}
-
-.BirthdayForm div label {
-  display: inline-block;
-}
-
-.BirthdayForm div label p {
-  font-weight: bolder;
-  display: inline-block;
-  width: 55px;
-}
-
-.BirthdayForm div label input {
-  margin-left: 10px;
-  border: 2.5px solid #d7dfe1;
-  width: 50px;
-  height: 17.5px;
-  display: inline-block;
-  text-align: center;
-}
-
-.BirthdayForm .BirthdayForm-month-field {
-  margin-top: -20px;
-  margin-bottom: -25px;
-}
-
-.BirthdayForm .BirthdayForm-day-field {
-  margin-top: 0px;
-  margin-bottom: -15px;
-}
-
-.BirthdayForm-submit-button {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
 }
 
-.BirthdayForm-submit-button button {
-  background-color: #171717;
-  color: ghostwhite;
-  font-variant: small-caps;
-  height: 40px;
-  width: 80px;
-  border: 2.5px solid #f1f1c6;
-  border-radius: 25% 10%;
+.BirthdayForm-instructions {
+  flex: 1 1 280px;
+  max-width: 58ch;
 }
 
-.BirthdayForm-submit-button button:hover {
+.BirthdayForm-instructions p {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.925rem;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+  text-wrap: pretty;
+}
+
+.BirthdayForm-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.65rem;
+}
+
+.BirthdayForm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.BirthdayForm-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.BirthdayForm-select {
+  appearance: none;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: var(--weight-medium);
+  color: var(--ink-primary);
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  padding: 0.55rem 2rem 0.55rem 0.75rem;
+  min-height: 40px;
   cursor: pointer;
-  background-color: #f1f1c6;
-  color: #171717;
-  border: 4px solid #171717;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink-secondary) 50%),
+    linear-gradient(135deg, var(--ink-secondary) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 9px) 50%;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+  transition:
+    border-color 150ms var(--ease-spring),
+    background-color 150ms var(--ease-spring);
+}
+
+.BirthdayForm-field--day .BirthdayForm-select {
+  min-width: 78px;
+}
+
+.BirthdayForm-select:hover,
+.BirthdayForm-select:focus-visible {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.BirthdayForm-today {
+  min-height: 40px;
+  padding: 0.55rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.06em;
+  color: var(--ink-primary);
+  background-color: var(--bg-recessed);
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  cursor: pointer;
+  transition:
+    color 150ms var(--ease-spring),
+    border-color 150ms var(--ease-spring),
+    opacity 150ms var(--ease-spring);
+}
+
+.BirthdayForm-today:hover:not(:disabled) {
+  border-color: var(--accent-primary);
+}
+
+.BirthdayForm-today:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
