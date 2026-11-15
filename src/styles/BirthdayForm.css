@@ -75,7 +75,6 @@
 
 .BirthdayForm-select:hover,
 .BirthdayForm-select:focus-visible {
-  outline: none;
   border-color: var(--accent-primary);
 }
 
@@ -91,6 +90,7 @@
   border: 1px solid var(--border-strong);
   border-radius: 7px;
   cursor: pointer;
+  touch-action: manipulation;
   transition:
     color 150ms var(--ease-spring),
     border-color 150ms var(--ease-spring),

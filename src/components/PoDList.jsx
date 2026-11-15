@@ -43,6 +43,7 @@ function PoDList({
   hydratedCount,
 }) {
   const [viewMode, setViewMode] = useState('deck');
+  const scrubberRef = useRef(null);
   const yearButtonRefs = useRef({});
 
   const availableYears = years.filter(
@@ -59,10 +60,14 @@ function PoDList({
   useEffect(() => {
     const activeButton = yearButtonRefs.current[selectedYear];
     if (activeButton && typeof activeButton.scrollIntoView === 'function') {
+      const prefersReduced =
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       activeButton.scrollIntoView({
-        behavior: 'smooth',
+        behavior: prefersReduced ? 'auto' : 'smooth',
         block: 'nearest',
         inline: 'center',
+        container: 'nearest',
       });
     }
   }, [selectedYear]);
@@ -71,10 +76,34 @@ function PoDList({
     if (viewMode !== 'deck' || availableYears.length === 0) return undefined;
 
     const handleKeyDown = (event) => {
-      const tag = event.target?.tagName;
-      if (tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA') {
+      if (
+        event.repeat ||
+        event.isComposing ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.shiftKey
+      ) {
         return;
       }
+
+      if (scrubberRef.current?.contains(event.target)) {
+        return;
+      }
+
+      const path =
+        typeof event.composedPath === 'function' ? event.composedPath() : [];
+      const isEditable = path.some((node) => {
+        if (!node || !node.tagName) return false;
+        const tag = node.tagName;
+        return (
+          tag === 'SELECT' ||
+          tag === 'INPUT' ||
+          tag === 'TEXTAREA' ||
+          node.isContentEditable
+        );
+      });
+      if (isEditable) return;
 
       if (event.key === 'ArrowLeft' && prevYear !== null) {
         event.preventDefault();
@@ -88,6 +117,30 @@ function PoDList({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [viewMode, availableYears.length, prevYear, nextYear, onSelectYear]);
+
+  const handleScrubberKeyDown = (event) => {
+    if (viewMode !== 'deck' || availableYears.length === 0) return;
+
+    let targetYear = null;
+    if (event.key === 'ArrowLeft') {
+      const idx = currentIndex >= 0 ? currentIndex : 0;
+      targetYear =
+        availableYears[(idx - 1 + availableYears.length) % availableYears.length];
+    } else if (event.key === 'ArrowRight') {
+      const idx = currentIndex >= 0 ? currentIndex : 0;
+      targetYear = availableYears[(idx + 1) % availableYears.length];
+    } else if (event.key === 'Home') {
+      targetYear = availableYears[0];
+    } else if (event.key === 'End') {
+      targetYear = availableYears[availableYears.length - 1];
+    }
+
+    if (targetYear === null) return;
+    event.preventDefault();
+    onPrefetchYear?.(targetYear);
+    onSelectYear(targetYear);
+    yearButtonRefs.current[targetYear]?.focus();
+  };
 
   if (!birthday || years.length === 0) {
     return null;
@@ -163,7 +216,11 @@ function PoDList({
   };
 
   return (
-    <main className='PoDList' aria-label='Chronological Observatory Deck'>
+    <div className='PoDList'>
+      <p className='visually-hidden' aria-live='polite'>
+        Showing {monthLabel} {dayLabel}, {selectedYear} — observation{' '}
+        {positionIndex} of {totalCount}
+      </p>
       <div className='PoDList-nav-panel'>
         <div className='PoDList-toolbar'>
           <div className='PoDList-readout instrument-badge'>
@@ -191,6 +248,7 @@ function PoDList({
             >
               <button
                 type='button'
+                aria-pressed={viewMode === 'deck'}
                 className={`PoDList-view-btn ${
                   viewMode === 'deck' ? 'is-active' : ''
                 }`}
@@ -200,6 +258,7 @@ function PoDList({
               </button>
               <button
                 type='button'
+                aria-pressed={viewMode === 'grid'}
                 className={`PoDList-view-btn ${
                   viewMode === 'grid' ? 'is-active' : ''
                 }`}
@@ -247,24 +306,36 @@ function PoDList({
         </div>
 
         <div
+          ref={scrubberRef}
           className='PoDList-scrubber'
-          role='tablist'
+          role={viewMode === 'deck' ? 'tablist' : 'group'}
           aria-label='Observation Years'
+          onKeyDown={handleScrubberKeyDown}
         >
-          {availableYears.map((year) => {
-            const isSelected = year === selectedYear && viewMode === 'deck';
+          {availableYears.map((year, idx) => {
+            const isActiveYear =
+              year === selectedYear ||
+              (currentIndex < 0 && idx === 0);
+            const isSelected = isActiveYear && viewMode === 'deck';
             const record = podsByYear[year];
             const isReady = record && typeof record === 'object';
 
             return (
               <button
                 key={year}
+                id={`year-tab-${year}`}
                 ref={(el) => {
                   yearButtonRefs.current[year] = el;
                 }}
                 type='button'
-                role='tab'
-                aria-selected={isSelected}
+                role={viewMode === 'deck' ? 'tab' : undefined}
+                aria-selected={viewMode === 'deck' ? isSelected : undefined}
+                aria-pressed={
+                  viewMode === 'grid' ? year === selectedYear : undefined
+                }
+                tabIndex={
+                  viewMode === 'deck' ? (isSelected ? 0 : -1) : undefined
+                }
                 className={`PoDList-year-key instrument-badge ${
                   isSelected ? 'is-selected' : ''
                 } ${isReady ? 'is-ready' : 'is-pending'}`}
@@ -289,20 +360,32 @@ function PoDList({
       </div>
 
       {viewMode === 'deck' ? (
-        <PoDListItem
-          pod={
-            activeEntry && typeof activeEntry === 'object' ? activeEntry : null
+        <div
+          role='tabpanel'
+          tabIndex={0}
+          aria-labelledby={
+            availableYears.length > 0
+              ? `year-tab-${
+                  currentIndex >= 0 ? selectedYear : availableYears[0]
+                }`
+              : undefined
           }
-          isLoading={!activeEntry || activeEntry === 'loading'}
-          selectedYear={selectedYear}
-          birthday={birthday}
-          positionIndex={positionIndex}
-          totalCount={totalCount}
-          prevYear={prevYear}
-          nextYear={nextYear}
-          onSelectYear={onSelectYear}
-          onPrefetchYear={onPrefetchYear}
-        />
+        >
+          <PoDListItem
+            pod={
+              activeEntry && typeof activeEntry === 'object' ? activeEntry : null
+            }
+            isLoading={!activeEntry || activeEntry === 'loading'}
+            selectedYear={selectedYear}
+            birthday={birthday}
+            positionIndex={positionIndex}
+            totalCount={totalCount}
+            prevYear={prevYear}
+            nextYear={nextYear}
+            onSelectYear={onSelectYear}
+            onPrefetchYear={onPrefetchYear}
+          />
+        </div>
       ) : (
         <div className='PoDList-contact-grid'>
           {availableYears.map((year) => {
@@ -338,16 +421,16 @@ function PoDList({
                   <span className='PoDList-contact-date instrument-badge'>
                     {isReady ? record.date : `${year}`}
                   </span>
-                  <h3 className='PoDList-contact-title'>
+                  <h2 className='PoDList-contact-title'>
                     {isReady ? record.title : 'Loading observation...'}
-                  </h3>
+                  </h2>
                 </div>
               </button>
             );
           })}
         </div>
       )}
-    </main>
+    </div>
   );
 }
 

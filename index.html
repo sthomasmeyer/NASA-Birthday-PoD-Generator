@@ -6,11 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://science.nasa.gov" crossorigin />
+    <link rel="preconnect" href="https://assets.science.nasa.gov" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&family=JetBrains+Mono:wght@100..800&display=swap"
       rel="stylesheet"
     />
-
+    <script>
+      try {
+        var t = localStorage.getItem('nasa-apod-theme');
+        document.documentElement.setAttribute(
+          'data-theme',
+          t === 'light' || t === 'dark' ? t : 'dark'
+        );
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    </script>
     <title>NASA Picture of the Day Generator</title>
   </head>
   <body>

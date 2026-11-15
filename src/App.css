@@ -7,6 +7,7 @@
  */
 
 :root {
+  color-scheme: light;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
   --font-display: var(--font-sans);
@@ -50,6 +51,7 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
   /* WHY: Step variable weights down 25-30 units in dark mode to prevent light
      glyphs on dark surfaces from blooming visually due to retinal halation. */
   --weight-regular: 375;
@@ -114,19 +116,35 @@ body {
   padding: clamp(1rem, 2vw, 1.5rem);
 }
 
+.App-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .numeric-readout,
 .instrument-badge {
   font-variant-numeric: tabular-nums slashed-zero;
   font-feature-settings: "calt" 1, "case" 1, "cv02" 1, "cv03" 1, "cv04" 1, "cv11" 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+.visually-hidden:where(:not(:focus-within, :active)) {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+:where(a, button, select, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  :where(a, button, select, input, textarea, [tabindex]):focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
   }
 }

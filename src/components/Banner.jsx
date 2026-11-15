@@ -63,6 +63,7 @@ const Banner = ({ theme, onToggleTheme }) => {
           type='button'
           className='Banner-theme-toggle instrument-badge'
           onClick={onToggleTheme}
+          aria-pressed={theme === 'dark'}
           aria-label={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
           title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
         >

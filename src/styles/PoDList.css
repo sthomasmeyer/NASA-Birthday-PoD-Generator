@@ -78,18 +78,22 @@
   color: var(--ink-secondary);
   background: transparent;
   border: 0;
+  border-bottom: 2px solid transparent;
   border-radius: 5px;
-  padding: 0.35rem 0.65rem;
+  padding: 0.35rem 0.65rem 0.25rem;
   cursor: pointer;
+  touch-action: manipulation;
   white-space: nowrap;
   transition:
     background-color 140ms var(--ease-spring),
+    border-color 140ms var(--ease-spring),
     color 140ms var(--ease-spring);
 }
 
 .PoDList-view-btn.is-active {
   background-color: var(--bg-surface);
   color: var(--ink-primary);
+  border-bottom-color: var(--accent-primary);
   box-shadow: 0 1px 2px oklch(0% 0 0 / 0.08);
 }
 
@@ -111,6 +115,7 @@
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   cursor: pointer;
+  touch-action: manipulation;
   text-align: center;
   transition:
     border-color 140ms var(--ease-spring),
@@ -141,6 +146,7 @@
 }
 
 .PoDList-year-key {
+  position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -157,6 +163,7 @@
   border: 1px solid var(--border-hairline);
   border-radius: 6px;
   cursor: pointer;
+  touch-action: manipulation;
   flex-shrink: 0;
   transition:
     background-color 140ms var(--ease-spring),
@@ -174,6 +181,7 @@
   color: var(--keycap-ink);
   background-color: var(--keycap-bg);
   border-color: var(--keycap-bg);
+  border-bottom: 2px solid var(--accent-primary);
   font-weight: var(--weight-semibold);
 }
 
@@ -215,6 +223,9 @@
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
+  touch-action: manipulation;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
   transition:
     border-color 160ms var(--ease-spring),
     transform 160ms var(--ease-spring);
@@ -358,5 +369,31 @@
 @media (max-width: 600px) {
   .PoDList-contact-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .PoDList-step-btn,
+  .PoDList-year-key,
+  .PoDList-contact-card,
+  .PoDList-contact-play {
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease,
+      opacity 150ms ease;
+  }
+
+  .PoDList-step-btn:active:not(:disabled),
+  .PoDList-contact-card:hover {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .PoDList-view-btn.is-active,
+  .PoDList-year-key.is-selected,
+  .PoDList-contact-card.is-selected {
+    border: 2px solid Highlight;
   }
 }

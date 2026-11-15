@@ -2,7 +2,7 @@
  * Chronological Observatory Controller: Archive Hydration & State Machine
  * ---------------------------------------------------------------------------
  * Coordinates reactive Month/Day dial selection, synchronous cache hydration,
- * two-stage dial-settle network batching, and predictive neighbor preloading.
+ * abortable two-stage network batching, and predictive neighbor preloading.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -12,6 +12,7 @@ import PoDList from './components/PoDList';
 import RateLimitError from './components/RateLimitError';
 import {
   fetchApodByDate,
+  getApodCalendarToday,
   getCachedApodByDate,
   getValidApodYears,
   preloadApodImage,
@@ -22,7 +23,8 @@ const THEME_STORAGE_KEY = 'nasa-apod-theme';
 
 function getInitialTheme() {
   try {
-    return localStorage.getItem(THEME_STORAGE_KEY) || 'dark';
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    return saved === 'light' || saved === 'dark' ? saved : 'dark';
   } catch {
     return 'dark';
   }
@@ -55,8 +57,8 @@ function buildInitialStateForDate(month, day, preferredYear = null) {
 function App() {
   const [theme, setTheme] = useState(getInitialTheme);
   const [birthday, setBirthday] = useState(() => {
-    const today = new Date();
-    return { month: today.getMonth() + 1, day: today.getDate() };
+    const today = getApodCalendarToday();
+    return { month: today.month, day: today.day };
   });
 
   const [years, setYears] = useState(
@@ -74,6 +76,9 @@ function App() {
   const selectedYearRef = useRef(selectedYear);
   selectedYearRef.current = selectedYear;
 
+  const podsByYearRef = useRef(podsByYear);
+  podsByYearRef.current = podsByYear;
+
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute('data-theme', theme);
@@ -88,12 +93,13 @@ function App() {
 
   // WHY: Two-step dial edits (Month -> Day) fire back-to-back state changes.
   // Hydrating cached records on Frame 0, fetching the active year + immediate
-  // neighbors at 60ms, and deferring the remaining ~29 years by 300ms prevents
-  // an intermediate Month selection from saturating the browser connection pool.
+  // neighbors at 60ms, and aborting superseded waves prevents stale Month edits
+  // from saturating the browser connection pool.
   useEffect(() => {
     if (!birthday) return undefined;
 
-    let isCancelled = false;
+    const controller = new AbortController();
+    const { signal } = controller;
     let priorityTimerId = null;
     let backgroundTimerId = null;
 
@@ -145,43 +151,50 @@ function App() {
             const record = await fetchApodByDate(
               year,
               birthday.month,
-              birthday.day
+              birthday.day,
+              { signal }
             );
             if (shouldPreloadImages && record?.imageUrl) {
               preloadApodImage(record.imageUrl);
             }
             return [year, record || 'unavailable'];
           } catch (error) {
+            if (error?.name === 'AbortError') {
+              return null;
+            }
             console.error(error);
             return [year, 'unavailable'];
           }
         })
       );
 
-      if (isCancelled) return [];
+      if (signal.aborted) return [];
 
-      setPodsByYear((prev) => {
-        const next = { ...prev };
-        for (const [year, val] of results) {
-          next[year] = val;
-        }
-        return next;
-      });
+      const validResults = results.filter(Boolean);
+      if (validResults.length > 0) {
+        setPodsByYear((prev) => {
+          const next = { ...prev };
+          for (const [year, val] of validResults) {
+            next[year] = val;
+          }
+          return next;
+        });
+      }
 
-      return results;
+      return validResults;
     };
 
     priorityTimerId = window.setTimeout(async () => {
-      if (isCancelled) return;
+      if (signal.aborted) return;
 
       const priorityResults =
         uncachedPriority.length > 0
           ? await fetchBatch(uncachedPriority, true)
           : [];
-      if (isCancelled) return;
+      if (signal.aborted) return;
 
       backgroundTimerId = window.setTimeout(async () => {
-        if (isCancelled) return;
+        if (signal.aborted) return;
 
         const waveSize = 8;
         let totalResolved =
@@ -191,7 +204,7 @@ function App() {
           priorityResults.filter(([, val]) => typeof val === 'object').length;
 
         for (let i = 0; i < uncachedRemaining.length; i += waveSize) {
-          if (isCancelled) return;
+          if (signal.aborted) return;
           const wave = uncachedRemaining.slice(i, i + waveSize);
           const waveResults = await fetchBatch(wave, false);
           totalResolved += waveResults.filter(
@@ -199,7 +212,7 @@ function App() {
           ).length;
         }
 
-        if (!isCancelled && totalResolved === 0) {
+        if (!signal.aborted && totalResolved === 0) {
           setErrorMessage(
             'Unable to retrieve NASA Astronomy Picture of the Day records for that date. Please verify your connection and try again.'
           );
@@ -208,16 +221,20 @@ function App() {
     }, 60);
 
     return () => {
-      isCancelled = true;
+      controller.abort();
       if (priorityTimerId !== null) window.clearTimeout(priorityTimerId);
       if (backgroundTimerId !== null) window.clearTimeout(backgroundTimerId);
     };
   }, [birthday, retryCount]);
 
   // WHY: Preload `year +- 1` and `year + 2` whenever `selectedYear` shifts so
-  // sequential arrow-key or button stepping hits warmed browser image caches.
+  // sequential stepping hits warmed image caches without re-running on every
+  // background hydration wave (reads `podsByYearRef` instead of subscribing to it).
   useEffect(() => {
-    if (!birthday || !selectedYear || years.length === 0) return;
+    if (!birthday || !selectedYear || years.length === 0) return undefined;
+
+    const controller = new AbortController();
+    const { signal } = controller;
 
     const idx = years.indexOf(selectedYear);
     const windowYears = [
@@ -227,13 +244,16 @@ function App() {
       idx >= 0 && idx < years.length - 2 ? years[idx + 2] : null,
     ].filter(Boolean);
 
+    const currentMap = podsByYearRef.current;
+
     for (const y of windowYears) {
-      const entry = podsByYear[y];
+      const entry = currentMap[y];
       if (entry && typeof entry === 'object' && entry.imageUrl) {
         preloadApodImage(entry.imageUrl);
       } else if (!entry || entry === 'loading') {
-        fetchApodByDate(y, birthday.month, birthday.day)
+        fetchApodByDate(y, birthday.month, birthday.day, { signal })
           .then((record) => {
+            if (signal.aborted) return;
             if (record?.imageUrl) {
               preloadApodImage(record.imageUrl);
             }
@@ -246,7 +266,9 @@ function App() {
           .catch(() => {});
       }
     }
-  }, [selectedYear, birthday, years, podsByYear]);
+
+    return () => controller.abort();
+  }, [selectedYear, birthday, years]);
 
   const handlePrefetchYear = useCallback(
     (year) => {
@@ -286,21 +308,19 @@ function App() {
   }, []);
 
   const handleSelectToday = useCallback(() => {
-    const current = new Date();
-    const todayMonth = current.getMonth() + 1;
-    const todayDay = current.getDate();
-    const todayYears = getValidApodYears(todayMonth, todayDay, current);
-    const newestYear = todayYears[0] || current.getFullYear();
+    const today = getApodCalendarToday();
+    const todayYears = getValidApodYears(today.month, today.day);
+    const newestYear = todayYears[0] || today.year;
 
     // WHY: Sync `selectedYearRef` before `setBirthday` runs so the hydration
     // effect anchors on `newestYear` instead of retaining an older browsed year.
     selectedYearRef.current = newestYear;
     setSelectedYear(newestYear);
     setBirthday((prev) => {
-      if (prev && prev.month === todayMonth && prev.day === todayDay) {
+      if (prev && prev.month === today.month && prev.day === today.day) {
         return prev;
       }
-      return { month: todayMonth, day: todayDay };
+      return { month: today.month, day: today.day };
     });
   }, []);
 
@@ -315,10 +335,7 @@ function App() {
   return (
     <div className='App'>
       <div className='App-control-deck'>
-        <Banner
-          theme={theme}
-          onToggleTheme={handleToggleTheme}
-        />
+        <Banner theme={theme} onToggleTheme={handleToggleTheme} />
         <BirthdayForm
           birthday={birthday}
           selectedYear={selectedYear}
@@ -328,22 +345,24 @@ function App() {
         />
       </div>
 
-      {errorMessage ? (
-        <RateLimitError
-          message={errorMessage}
-          onRetry={() => setRetryCount((c) => c + 1)}
-        />
-      ) : (
-        <PoDList
-          years={years}
-          selectedYear={selectedYear}
-          onSelectYear={setSelectedYear}
-          onPrefetchYear={handlePrefetchYear}
-          podsByYear={podsByYear}
-          birthday={birthday}
-          hydratedCount={hydratedCount}
-        />
-      )}
+      <main className='App-main' aria-label='Chronological Observatory Deck'>
+        {errorMessage ? (
+          <RateLimitError
+            message={errorMessage}
+            onRetry={() => setRetryCount((c) => c + 1)}
+          />
+        ) : (
+          <PoDList
+            years={years}
+            selectedYear={selectedYear}
+            onSelectYear={setSelectedYear}
+            onPrefetchYear={handlePrefetchYear}
+            podsByYear={podsByYear}
+            birthday={birthday}
+            hydratedCount={hydratedCount}
+          />
+        )}
+      </main>
     </div>
   );
 }

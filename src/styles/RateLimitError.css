@@ -39,4 +39,12 @@
   border: 1px solid var(--keycap-bg);
   border-radius: 6px;
   cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    border-color 140ms var(--ease-spring),
+    opacity 140ms var(--ease-spring);
+}
+
+.RateLimitError-retry:hover {
+  border-color: var(--accent-primary);
 }

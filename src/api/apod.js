@@ -2,14 +2,15 @@
  * NASA APOD Data Layer: science.nasa.gov WordPress REST Adapter
  * ---------------------------------------------------------------------------
  * Queries NASA's keyless `apod-basic/{YYMMDD}` endpoint with a two-tier
- * (Map + sessionStorage) cache, in-flight request deduplication, calibrated
- * CDN image sizing, and async image preloading for zero-latency navigation.
+ * (Map + sessionStorage) cache, ref-counted AbortController deduplication,
+ * calibrated CDN sizing, and explicit America/New_York calendar boundaries.
  */
 
 const APOD_API_BASE = 'https://science.nasa.gov/wp-json/wp/v2/apod-basic';
 const PLACEHOLDER_THUMB_FRAGMENT = 'news-thumbnail.png';
 const DYNAMIC_IMAGE_HOST = 'assets.science.nasa.gov/dynamicimage/';
 const SESSION_CACHE_KEY = 'nasa-apod-cache-v1';
+const APOD_TIMEZONE = 'America/New_York';
 
 const memoryCache = new Map();
 const inFlightRequests = new Map();
@@ -52,6 +53,31 @@ export function isLeapYear(year) {
   return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 }
 
+// WHY: NASA APOD publishes daily on US Eastern time. Resolving "today" in
+// America/New_York prevents Eastern Hemisphere clients from requesting
+// tomorrow's unpublished date and hitting premature 404s.
+export function getApodCalendarToday(now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: APOD_TIMEZONE,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(now);
+
+  const values = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      values[part.type] = Number(part.value);
+    }
+  }
+
+  return {
+    year: values.year,
+    month: values.month,
+    day: values.day,
+  };
+}
+
 // WHY: NASA's `apod-basic` endpoint ignores `?date=YYYY-MM-DD` and requires a
 // 6-digit `YYMMDD` path slug; e.g., (1995, 7, 16) -> "950716".
 export function formatApodSlug(year, month, day) {
@@ -64,9 +90,11 @@ export function formatApodSlug(year, month, day) {
 export function getValidApodYears(month, day, now = new Date()) {
   const m = Number(month);
   const d = Number(day);
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
-  const currentDay = now.getDate();
+  const {
+    year: currentYear,
+    month: currentMonth,
+    day: currentDay,
+  } = getApodCalendarToday(now);
 
   const hasOccurredThisYear =
     m < currentMonth || (m === currentMonth && d <= currentDay);
@@ -138,10 +166,17 @@ export function sanitizeCredit(rawCredit = '') {
 function normalizeProtocolUrl(url) {
   if (!url) return null;
   const trimmed = url.trim().replace(/&#0*38;|&amp;/g, '&');
-  if (trimmed.startsWith('//')) {
-    return `https:${trimmed}`;
+  const candidate = trimmed.startsWith('//') ? `https:${trimmed}` : trimmed;
+
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return null;
+    }
+    return parsed.href;
+  } catch {
+    return null;
   }
-  return trimmed;
 }
 
 // WHY: NASA's `dynamicimage` CDN often defaults to `?w=5252` or `?w=7200`
@@ -176,17 +211,17 @@ function extractYouTubeThumbnail(embedUrl) {
   return match ? `https://i.ytimg.com/vi/${match[1]}/hqdefault.jpg` : null;
 }
 
-async function resolveVimeoThumbnail(embedUrl) {
+async function resolveVimeoThumbnail(embedUrl, signal) {
   if (!embedUrl || !embedUrl.includes('vimeo.com')) return null;
   try {
     const cleanVimeoUrl = embedUrl.split('?')[0];
     const oembedUrl = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(
       cleanVimeoUrl
     )}`;
-    const res = await fetch(oembedUrl);
+    const res = await fetch(oembedUrl, { signal });
     if (!res.ok) return null;
     const data = await res.json();
-    return data.thumbnail_url || null;
+    return normalizeProtocolUrl(data.thumbnail_url) || null;
   } catch {
     return null;
   }
@@ -261,7 +296,7 @@ export function normalizeApodRecord(raw, requestedYear) {
     alt: decodeHtmlEntities(
       raw.alt || raw.title || 'NASA Astronomy Picture of the Day'
     ).trim(),
-    permalink: raw.permalink || raw.url || null,
+    permalink: normalizeProtocolUrl(raw.permalink || raw.url),
   };
 }
 
@@ -280,7 +315,55 @@ export function preloadApodImage(url) {
   img.src = url;
 }
 
-export async function fetchApodByDate(year, month, day) {
+function createAbortError() {
+  return new DOMException('The operation was aborted.', 'AbortError');
+}
+
+function attachCallerSignal(entry, signal) {
+  if (!signal) {
+    entry.waiters += 1;
+    return entry.promise.finally(() => {
+      entry.waiters -= 1;
+    });
+  }
+
+  if (signal.aborted) {
+    return Promise.reject(createAbortError());
+  }
+
+  entry.waiters += 1;
+
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      entry.waiters -= 1;
+      if (entry.waiters <= 0) {
+        entry.controller.abort();
+      }
+      reject(createAbortError());
+    };
+
+    signal.addEventListener('abort', onAbort, { once: true });
+
+    entry.promise.then(
+      (value) => {
+        signal.removeEventListener('abort', onAbort);
+        entry.waiters -= 1;
+        resolve(value);
+      },
+      (err) => {
+        signal.removeEventListener('abort', onAbort);
+        entry.waiters -= 1;
+        reject(err);
+      }
+    );
+  });
+}
+
+export async function fetchApodByDate(year, month, day, { signal } = {}) {
+  if (signal?.aborted) {
+    throw createAbortError();
+  }
+
   const slug = formatApodSlug(year, month, day);
 
   if (memoryCache.has(slug)) {
@@ -289,12 +372,21 @@ export async function fetchApodByDate(year, month, day) {
   }
 
   if (inFlightRequests.has(slug)) {
-    return inFlightRequests.get(slug);
+    return attachCallerSignal(inFlightRequests.get(slug), signal);
   }
 
-  const requestPromise = (async () => {
+  const controller = new AbortController();
+  const entry = {
+    controller,
+    waiters: 0,
+    promise: null,
+  };
+
+  entry.promise = (async () => {
     try {
-      const response = await fetch(`${APOD_API_BASE}/${slug}`);
+      const response = await fetch(`${APOD_API_BASE}/${slug}`, {
+        signal: controller.signal,
+      });
 
       if (response.status === 404) {
         memoryCache.set(slug, 'unavailable');
@@ -317,7 +409,10 @@ export async function fetchApodByDate(year, month, day) {
         !record.posterUrl &&
         record.iframeUrl?.includes('vimeo.com')
       ) {
-        const vimeoThumb = await resolveVimeoThumbnail(record.iframeUrl);
+        const vimeoThumb = await resolveVimeoThumbnail(
+          record.iframeUrl,
+          controller.signal
+        );
         if (vimeoThumb) {
           record.posterUrl = vimeoThumb;
           record.imageUrl = vimeoThumb;
@@ -333,6 +428,6 @@ export async function fetchApodByDate(year, month, day) {
     }
   })();
 
-  inFlightRequests.set(slug, requestPromise);
-  return requestPromise;
+  inFlightRequests.set(slug, entry);
+  return attachCallerSignal(entry, signal);
 }

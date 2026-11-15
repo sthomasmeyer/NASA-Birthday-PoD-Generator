@@ -64,6 +64,7 @@
   padding: 0.4rem 0.75rem;
   border-radius: 6px;
   cursor: pointer;
+  touch-action: manipulation;
   transition:
     background-color 150ms var(--ease-spring),
     border-color 150ms var(--ease-spring),
@@ -76,6 +77,18 @@
 
 .Banner-theme-toggle:active {
   transform: translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .Banner-theme-toggle {
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease;
+  }
+
+  .Banner-theme-toggle:active {
+    transform: none;
+  }
 }
 
 .Banner-theme-icon {
