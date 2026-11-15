@@ -20,6 +20,7 @@
 .PoDListItem-stage {
   position: relative;
   width: 100%;
+  aspect-ratio: 16 / 10;
   min-height: 360px;
   max-height: 70vh;
   background-color: var(--bg-stage);
@@ -33,7 +34,6 @@
 
 .PoDListItem-stage--loading,
 .PoDListItem-stage--empty {
-  min-height: 420px;
   padding: 2rem;
   text-align: center;
   color: oklch(72% 0.005 95);
@@ -125,6 +125,7 @@
   border-radius: 5px;
   background-color: var(--bg-recessed);
   border: 1px solid var(--border-hairline);
+  touch-action: manipulation;
   transition:
     color 140ms var(--ease-spring),
     border-color 140ms var(--ease-spring);
@@ -209,6 +210,7 @@
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   cursor: pointer;
+  touch-action: manipulation;
   transition:
     border-color 140ms var(--ease-spring),
     opacity 140ms var(--ease-spring);

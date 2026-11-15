@@ -70,6 +70,7 @@ function PoDListItem({
             key={pod.iframeUrl}
             src={pod.iframeUrl}
             title={pod.title}
+            loading='lazy'
             allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
             allowFullScreen
           />
@@ -84,7 +85,7 @@ function PoDListItem({
             src={pod.imageUrl}
             alt={pod.alt || pod.title}
             decoding='async'
-            fetchPriority='high'
+            {...{ fetchpriority: 'high' }}
           />
         </div>
       );
@@ -124,10 +125,11 @@ function PoDListItem({
               <a
                 href={pod.permalink}
                 target='_blank'
-                rel='noreferrer'
+                rel='noopener noreferrer'
                 className='PoDListItem-ext-link instrument-badge'
               >
                 NASA ARCHIVE ↗
+                <span className='visually-hidden'> (opens in a new tab)</span>
               </a>
             </div>
           )}

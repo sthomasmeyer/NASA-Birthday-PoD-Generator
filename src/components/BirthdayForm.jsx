@@ -1,4 +1,5 @@
 import React from 'react';
+import { getApodCalendarToday } from '../api/apod';
 import '../styles/BirthdayForm.css';
 
 const MONTHS = [
@@ -35,9 +36,7 @@ function BirthdayForm({
   onDateChange,
   onSelectToday,
 }) {
-  const now = new Date();
-  const todayMonth = now.getMonth() + 1;
-  const todayDay = now.getDate();
+  const { month: todayMonth, day: todayDay } = getApodCalendarToday();
 
   const month = birthday?.month ?? todayMonth;
   const maxVal = getDaysInMonth(month);
